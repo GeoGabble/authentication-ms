@@ -10,7 +10,7 @@ async function bootstrap() {
       options: {
         package: 'authentication',
         protoPath: join(__dirname, './proto/authentication.proto'),
-        url: 'https://authentication-ms.onrender.com',
+        url: 'localhost:3000',
     }});
     
   await app.startAllMicroservices();
