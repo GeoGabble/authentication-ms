@@ -63,4 +63,38 @@ export class AuthenticationService {
 
     }
 
+    async verifyUser(user_id: string, token: string) {
+        const user = await this.authRepository.findOne({where: {user_id: user_id}});
+        console.log(user);
+        if(user===null) {
+            return {
+                status: "error",
+                message: "User not found"
+            }
+        } else if (user.status==="suspended") {
+            return {
+                status: "error",
+                message: "Account is suspended"
+            }
+        } else if (user!==null && user.status==="terminated") {
+            return {
+                status: "error",
+                message: "Account is terminated"
+            }
+        } else if(user.token!==token) {
+            return {
+                status: "error",
+                message: "Invalid token"
+            }
+        } else {
+            return {
+                status: "success",
+                message: "Valid token"
+            }
+        }
+    }
+
+
+    
+
 }
