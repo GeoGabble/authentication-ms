@@ -17,6 +17,7 @@ export class AuthenticationService {
 
     async getToken(authDto: AuthDto) {
         // await this.authRepository.clear();
+        console.log(authDto.user_id);
         try {
             let user = await this.authRepository.findOne({where: {user_id: authDto.user_id}});
             if(user!==null && user.status=="suspended") {
@@ -31,6 +32,7 @@ export class AuthenticationService {
                 }
             } else {
                 const secret = this.configService.get<string>('TOKEN_SECRET');
+                console.log(secret);
                 const hash_token : string= createHmac('sha256',secret).update(`${Date.now().toString()+authDto.user_id}`).digest('hex');
                 const final_token = `${hash_token.valueOf()}-${authDto.user_id}`;
                 console.log(final_token);
