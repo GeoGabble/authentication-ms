@@ -3,12 +3,12 @@ import { Column, Entity, PrimaryColumn, Unique } from "typeorm";
 @Entity()
 export class Authentication {
 
-    @PrimaryColumn('string')
+    @PrimaryColumn()
     user_id: string;
 
-    @Column('string')
+    @Column()
     token: string;
 
-    @Column('string')
+    @Column()
     status: string;
 }
