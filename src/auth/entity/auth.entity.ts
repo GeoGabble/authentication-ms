@@ -1,7 +1,6 @@
 import { Column, Entity, PrimaryColumn, Unique } from "typeorm";
 
 @Entity()
-@Unique(["user_id"])
 export class Authentication {
 
     @PrimaryColumn()
