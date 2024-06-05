@@ -1,0 +1,12 @@
+services:
+  geo_auth:
+    build:
+      context:
+        dockerfile: Dockerfile
+      ports:
+        - '3000:3000'
+        - '8088:8088'
+      environment:
+        - TOKEN_SECRET=authorization_token_secret
+      volumes:
+        - ./src:/usr/src/app/src  
