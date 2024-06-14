@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Authentication } from "./entity/auth.entity";
 import { Repository, Timestamp } from "typeorm";
@@ -18,23 +18,20 @@ export class AuthenticationService {
     async getToken(authDto: AuthDto) {
         // await this.authRepository.clear();
         console.log(authDto.user_id);
+        if(authDto.user_id == undefined) {
+            throw new HttpException('Required body params not found.', HttpStatus.BAD_REQUEST);
+        }
         try {
             let user = await this.authRepository.findOne({where: {user_id: authDto.user_id}});
             if(user!==null && user.status=="suspended") {
-                return {
-                    status: "error",
-                    message: "Account is suspended"
-                }
+                throw new HttpException('Account is suspended', HttpStatus.FORBIDDEN);
             } else if (user!=null && user.status=="terminated") {
-                return {
-                    status: "error",
-                    message: "Account is terminated"
-                }
+                throw new HttpException('Account is terminated', HttpStatus.FORBIDDEN);
             } else {
                 const secret = this.configService.get<string>('TOKEN_SECRET');
                 console.log(secret);
                 const hash_token : string= createHmac('sha256',secret).update(`${Date.now().toString()+authDto.user_id}`).digest('hex');
-                const final_token = `${hash_token.valueOf()}-${authDto.user_id}`;
+                const final_token = `${hash_token.valueOf()}`;
                 console.log(final_token);
                 if (user===null) {
                     const new_user = new Authentication();
@@ -43,23 +40,24 @@ export class AuthenticationService {
                     new_user.token = final_token;
                     await this.authRepository.save(new_user);
                     return {
-                        status: "success",
-                        token: final_token,
+                        statusCode: 201,
+                        message : {
+                            token: final_token
+                        }
                     }
                 }
                 user.token = final_token;
                 await this.authRepository.save(user);
                 await this.wsService.disconnectUser(authDto.user_id);
                 return {
-                    status: "success",
-                    token: final_token,
+                    statusCode: 201,
+                    message : {
+                        token: final_token
+                    }
                 }
             }
         } catch (error) {
-            return {
-                status: "error",
-                message: error.message
-            }
+            throw new HttpException(error , HttpStatus.INTERNAL_SERVER_ERROR);
          };
         
 

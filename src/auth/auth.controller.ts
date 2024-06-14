@@ -6,7 +6,7 @@ import { VerificationRequest } from "src/proto/interfaces/verification-request.i
 import { VerificationResponse } from "src/proto/interfaces/verification-response.interface";
 import { Metadata, ServerUnaryCall } from "@grpc/grpc-js";
 
-@Controller('auth')
+@Controller()
 export class AuthenticationController {
     constructor(
         private readonly authService: AuthenticationService

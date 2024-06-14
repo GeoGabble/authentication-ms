@@ -6,9 +6,9 @@ import { Authentication } from "src/auth/entity/auth.entity";
 import { Repository } from "typeorm";
 
 
-@WebSocketGateway()
+@WebSocketGateway({namespace: 'logout'})
 @Injectable()
-export class StatusGateway implements OnGatewayInit {
+export class StatusGateway implements OnGatewayInit { 
 
     constructor(@InjectRepository(Authentication) private readonly authRepository: Repository<Authentication>) {}
     afterInit(server: Server) {
@@ -23,22 +23,27 @@ export class StatusGateway implements OnGatewayInit {
 
     @SubscribeMessage('joinRoom')
     async onJoinRoom(@ConnectedSocket() socket: Socket,@MessageBody() user_id: string, @MessageBody() token: string) {
-        const result = await this.verifyUser(user_id["user_id"], token["token"]);
-        console.log(user_id["user_id"]);
-        console.log(result);
-        await socket.join(user_id["user_id"]);
-        if(result.status === 'error') {
-            this.server.to(user_id["user_id"]).emit('status', {
+        if(user_id["user_id"]===undefined || token["token"]===undefined){
+            socket.emit('status', {
                 status: "error",
-                message: result.message
+                message: "Required message body was not provided."
             });
             socket.disconnect(true);
+        }else{
+            const result = await this.verifyUser(user_id["user_id"], token["token"]);
+            await socket.join(user_id["user_id"]);
+            if(result.status === 'error') {
+                this.server.to(user_id["user_id"]).emit('status', {
+                    status: "error",
+                    message: result.message
+            });
+            socket.disconnect(true);
+        }
         }
     }
 
 
     async disconnectUser(user_id: string) {
-        console.log("Testing  "+user_id);
         this.server.to(user_id).emit('status', {
             status: "disconnect",
             message: "Need to relogin"
@@ -48,7 +53,6 @@ export class StatusGateway implements OnGatewayInit {
 
     async verifyUser(user_id: string, token: string) {
         const user = await this.authRepository.findOne({where: {user_id: user_id}});
-        console.log(user);
         if(user===null) {
             return {
                 status: "error",
